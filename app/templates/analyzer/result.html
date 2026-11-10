@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% block title %}Analysis {{ scan.analysis_uid }} — ScamShield AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-dark border border-info border-opacity-50 font-mono text-cyan">{{ scan.analysis_uid }}</span>
+            <span class="badge bg-primary bg-opacity-25 text-info text-uppercase">{{ scan.channel_label }}</span>
+            <span class="text-muted small">{{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span>
+        </div>
+        <h3 class="fw-bold text-white mb-0">{{ result.scam_type }}</h3>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0">
+        <a href="{{ url_for('analyzer.download_pdf', scan_id=scan.id) }}" class="btn btn-cyber">
+            <i class="fa-solid fa-file-pdf me-2"></i>Download Forensic PDF Report
+        </a>
+        <a href="{{ url_for('analyzer.hub', channel=scan.channel) }}" class="btn btn-outline-cyber">
+            <i class="fa-solid fa-rotate-right me-1"></i>New Scan
+        </a>
+    </div>
+</div>
+
+<!-- Top Summary Row: Risk Gauge + AI/ML Telemetry + Attach to Case -->
+<div class="row g-4 mb-4" data-result-risk-score="{{ result.risk_score }}">
+    <div class="col-lg-4">
+        <div class="glass-card p-4 text-center h-100 d-flex flex-column justify-content-center">
+            {% set rc = result.risk_category %}
+            <div class="score-ring {% if rc == 'Critical Risk' %}ring-critical{% elif rc == 'High Risk' %}ring-high{% elif rc == 'Medium Risk' %}ring-medium{% else %}ring-low{% endif %} mb-3">
+                <div class="display-5 fw-bold text-white lh-1">{{ result.risk_score }}</div>
+                <div class="small text-muted fw-semibold">/ 100</div>
+            </div>
+
+            <div>
+                <span class="risk-badge {% if rc == 'Critical Risk' %}risk-critical{% elif rc == 'High Risk' %}risk-high{% elif rc == 'Medium Risk' %}risk-medium{% else %}risk-low{% endif %} px-3 py-2 fs-6">
+                    <i class="fa-solid fa-shield-virus"></i> {{ result.risk_category }}
+                </span>
+            </div>
+
+            <div class="row g-2 mt-3 pt-3 border-top border-secondary border-opacity-25 text-center">
+                <div class="col-4">
+                    <div class="small text-muted">ML Prob.</div>
+                    <div class="fw-bold text-cyan">{{ (result.ml_probability * 100) | round(1) }}%</div>
+                </div>
+                <div class="col-4">
+                    <div class="small text-muted">Rule Score</div>
+                    <div class="fw-bold text-white">{{ result.rule_score }}/100</div>
+                </div>
+                <div class="col-4">
+                    <div class="small text-muted">Confidence</div>
+                    <div class="fw-bold text-info">{{ result.confidence_score }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <h5 class="fw-bold text-white mb-2"><i class="fa-solid fa-brain text-cyan me-2"></i>Executive Findings &amp; Hybrid Explanation</h5>
+                <p class="text-secondary mb-3" style="line-height: 1.65;">
+                    {{ result.explanation }}
+                </p>
+
+                {% set fb = result.feature_breakdown %}
+                {% if fb.get('top_ml_terms') %}
+                <div class="mb-3">
+                    <div class="small text-muted fw-semibold mb-1">Top TF-IDF Linguistic Features Driving ML Classification:</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for item in fb.get('top_ml_terms', []) %}
+                        <span class="badge bg-dark border border-info border-opacity-25 font-mono text-info">
+                            {{ item.term }} (+{{ item.weight }})
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% set ents = fb.get('extracted_entities', {}) %}
+                {% if ents.get('urls') or ents.get('domains') or ents.get('phones') or ents.get('payment_handles') or ents.get('crypto_wallets') %}
+                <div class="p-3 rounded-3 mb-3" style="background: rgba(6, 11, 25, 0.65); border: 1px solid rgba(0, 212, 255, 0.2);">
+                    <div class="small fw-bold text-cyan mb-2"><i class="fa-solid fa-fingerprint me-1"></i>Extracted Indicators of Compromise (IoCs)</div>
+                    <div class="row g-2 small">
+                        {% if ents.get('domains') %}
+                        <div class="col-md-6"><strong class="text-white">Domains:</strong> <span class="font-mono text-warning">{{ ents.get('domains') | join(', ') }}</span></div>
+                        {% endif %}
+                        {% if ents.get('phones') %}
+                        <div class="col-md-6"><strong class="text-white">Phone Numbers:</strong> <span class="font-mono text-info">{{ ents.get('phones') | join(', ') }}</span></div>
+                        {% endif %}
+                        {% if ents.get('payment_handles') %}
+                        <div class="col-md-6"><strong class="text-white">UPI Handles:</strong> <span class="font-mono text-danger">{{ ents.get('payment_handles') | join(', ') }}</span></div>
+                        {% endif %}
+                        {% if ents.get('crypto_wallets') %}
+                        <div class="col-md-6"><strong class="text-white">Crypto Wallets:</strong> <span class="font-mono text-danger">{{ ents.get('crypto_wallets') | join(', ') }}</span></div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="p-2 px-3 rounded-3 small text-secondary" style="background: rgba(148, 163, 184, 0.08); border-left: 3px solid #00d4ff;">
+                <i class="fa-solid fa-circle-info text-cyan me-1"></i>
+                <strong>Probabilistic Notice:</strong> {{ fb.get('disclaimer') }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Static URL Security Breakdown (If Channel == URL or URL Details Present) -->
+{% set url_info = result.feature_breakdown.get('url_inspection') %}
+{% if url_info %}
+<div class="glass-card p-4 mb-4">
+    <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-globe text-cyan me-2"></i>Static URL Security Inspection Matrix (Non-Executing)</h5>
+    <div class="row g-3 text-center">
+        <div class="col-6 col-md-2">
+            <div class="p-2 rounded-3 bg-dark border border-secondary border-opacity-25">
+                <div class="small text-muted">Format Valid</div>
+                <div class="fw-bold {% if url_info.is_valid_format %}text-success{% else %}text-danger{% endif %}">
+                    {{ 'Yes' if url_info.is_valid_format else 'Malformed' }}
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 rounded-3 bg-dark border border-secondary border-opacity-25">
+                <div class="small text-muted">HTTPS Encryption</div>
+                <div class="fw-bold {% if url_info.uses_https %}text-success{% else %}text-warning{% endif %}">
+                    {{ 'HTTPS Active' if url_info.uses_https else 'Unencrypted HTTP' }}
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 rounded-3 bg-dark border border-secondary border-opacity-25">
+                <div class="small text-muted">Host Type</div>
+                <div class="fw-bold {% if url_info.is_ip_hostname %}text-danger{% else %}text-info{% endif %}">
+                    {{ 'Raw IP Address' if url_info.is_ip_hostname else 'Domain Name' }}
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 rounded-3 bg-dark border border-secondary border-opacity-25">
+                <div class="small text-muted">Punycode (xn--)</div>
+                <div class="fw-bold {% if url_info.has_punycode %}text-danger{% else %}text-success{% endif %}">
+                    {{ 'Detected!' if url_info.has_punycode else 'None' }}
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 rounded-3 bg-dark border border-secondary border-opacity-25">
+                <div class="small text-muted">High-Risk TLD</div>
+                <div class="fw-bold {% if url_info.suspicious_tld %}text-danger{% else %}text-success{% endif %}">
+                    {{ 'Flagged' if url_info.suspicious_tld else 'Standard' }}
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="p-2 rounded-3 bg-dark border border-secondary border-opacity-25">
+                <div class="small text-muted">Brand Spoofing</div>
+                <div class="fw-bold {% if url_info.impersonated_brand %}text-danger{% else %}text-success{% endif %}">
+                    {{ url_info.impersonated_brand or 'None' }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Suspicious Indicators & Safety Recommendations Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-magnifying-glass-chart text-warning me-2"></i>Suspicious Indicators Identified ({{ result.indicators | length }})</h5>
+            <div class="d-grid gap-3">
+                {% for ind in result.indicators %}
+                <div class="p-3 rounded-3" style="background: rgba(10, 17, 40, 0.78); border-left: 4px solid {% if ind.severity == 'Critical' %}#ef4444{% elif ind.severity == 'High' %}#f97316{% elif ind.severity == 'Medium' %}#f59e0b{% else %}#10b981{% endif %};">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-white small">{{ ind.title }}</span>
+                        <span class="badge {% if ind.severity == 'Critical' %}bg-danger{% elif ind.severity == 'High' %}bg-warning text-dark{% elif ind.severity == 'Medium' %}bg-info text-dark{% else %}bg-success{% endif %}">
+                            {{ ind.severity }} &middot; {{ ind.category }}
+                        </span>
+                    </div>
+                    <p class="text-secondary small mb-0">{{ ind.detail }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-life-ring text-success me-2"></i>Recommended Safety &amp; Response Actions</h5>
+            <div class="d-grid gap-3">
+                {% for rec in result.recommendations %}
+                <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.07); border: 1px solid rgba(16, 185, 129, 0.25);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-white small"><i class="fa-solid fa-check-circle text-success me-1"></i>{{ rec.action }}</span>
+                        <span class="badge bg-dark border border-success border-opacity-50 text-success">{{ rec.priority }}</span>
+                    </div>
+                    <p class="text-secondary small mb-0">{{ rec.detail }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submitted Artifact & Escalate to Investigation Case -->
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="glass-card p-4 h-100">
+            <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-file-code text-cyan me-2"></i>Submitted Content (Handled Safely in Text Sandbox)</h6>
+            {% if scan.subject_or_sender %}
+            <div class="small text-info mb-2"><strong>Sender / Subject Context:</strong> <span class="font-mono">{{ scan.subject_or_sender }}</span></div>
+            {% endif %}
+            <pre class="p-3 rounded-3 font-mono small text-white mb-0" style="background: rgba(6, 11, 25, 0.85); border: 1px solid rgba(148, 163, 184, 0.2); white-space: pre-wrap;">{{ scan.submitted_content }}</pre>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="glass-card p-4 h-100">
+            <h6 class="fw-bold text-white mb-2"><i class="fa-solid fa-diagram-project text-cyan me-2"></i>Link Scan to Investigation Case</h6>
+            <p class="text-secondary small">
+                Attach this scan as formal evidence to correlate shared domains, phone numbers, or UPI handles across multiple artifacts.
+            </p>
+            {% if user_cases %}
+            <form method="POST" action="{{ url_for('investigation.add_evidence', case_id=user_cases[0].id) }}" id="attachToCaseForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="scan_id" value="{{ scan.id }}">
+                <div class="mb-3">
+                    <label class="form-label">Select Existing Case</label>
+                    <select class="form-select" id="caseSelector" onchange="document.getElementById('attachToCaseForm').action = '/investigations/' + this.value + '/evidence';">
+                        {% for c in user_cases %}
+                        <option value="{{ c.id }}">{{ c.case_uid }} — {{ c.title }} ({{ c.status }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Evidence Label</label>
+                    <input type="text" name="label" class="form-control" value="Scan {{ scan.analysis_uid }} ({{ scan.channel | upper }} - {{ result.risk_score }}/100)">
+                </div>
+                <button type="submit" class="btn btn-cyber w-100">
+                    <i class="fa-solid fa-link me-2"></i>Attach Scan to Selected Case
+                </button>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('investigation.create_case') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="initial_scan_id" value="{{ scan.id }}">
+                <input type="hidden" name="title" value="Investigation: {{ result.scam_type }} ({{ scan.analysis_uid }})">
+                <input type="hidden" name="severity" value="{{ 'Critical' if result.risk_score >= 75 else ('High' if result.risk_score >= 50 else 'Medium') }}">
+                <input type="hidden" name="category" value="{{ result.scam_type }}">
+                <input type="hidden" name="description" value="Initiated from scan {{ scan.analysis_uid }}.">
+                <button type="submit" class="btn btn-cyber w-100">
+                    <i class="fa-solid fa-folder-plus me-2"></i>Create New Investigation Case with This Scan
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

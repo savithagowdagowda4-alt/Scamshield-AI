@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}Investigation Engine — ScamShield AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-diagram-project text-cyan me-2"></i>Cyber Investigation Engine</h3>
+        <p class="text-secondary small mb-0">Group related suspicious messages, URLs, and payment requests to discover shared entities and build incident timelines.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Create New Investigation Case -->
+    <div class="col-lg-4">
+        <div class="glass-card p-4">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-folder-plus text-cyan me-2"></i>Open New Investigation Case</h5>
+            <form method="POST" action="{{ url_for('investigation.create_case') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                    <label class="form-label">Case Title *</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Coordinated Bank KYC & UPI Fraud Cluster" required>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Severity</label>
+                        <select name="severity" class="form-select">
+                            <option value="Critical">Critical</option>
+                            <option value="High">High</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Primary Category</label>
+                        <select name="category" class="form-select">
+                            <option value="Multi-Channel Phishing">Multi-Channel Phishing</option>
+                            <option value="UPI / Payment Diversion">UPI / Payment Diversion</option>
+                            <option value="Business Email Compromise">Business Email Compromise</option>
+                            <option value="Task & Investment Fraud">Task &amp; Investment Fraud</option>
+                            <option value="Digital Arrest Extortion">Digital Arrest Extortion</option>
+                            <option value="Social Media Impersonation">Social Media Impersonation</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Initial Linked Scan (Optional)</label>
+                    <select name="initial_scan_id" class="form-select">
+                        <option value="">-- Start with empty evidence locker --</option>
+                        {% for s in user_scans %}
+                        <option value="{{ s.id }}">{{ s.analysis_uid }} ({{ s.channel | upper }} - {{ s.result.risk_score if s.result else 0 }}/100)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Case Scope &amp; Background</label>
+                    <textarea name="description" rows="4" class="form-control" placeholder="Describe the suspected threat actor, target victim group, or Modus Operandi..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-cyber w-100">
+                    <i class="fa-solid fa-plus-circle me-2"></i>Initialize Investigation Case
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: Filter & Case List -->
+    <div class="col-lg-8">
+        <div class="glass-card p-3 mb-3">
+            <form method="GET" action="{{ url_for('investigation.list_cases') }}" class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small mb-1">Search Cases</label>
+                    <input type="text" name="q" class="form-control form-control-sm" placeholder="Title, Case UID, Category..." value="{{ filters.q }}">
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <label class="form-label small mb-1">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">All Statuses</option>
+                        {% for st in ['Open', 'In Progress', 'Escalated', 'Resolved', 'Closed'] %}
+                        <option value="{{ st }}" {% if filters.status == st %}selected{% endif %}>{{ st }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <label class="form-label small mb-1">Severity</label>
+                    <select name="severity" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        {% for sv in ['Critical', 'High', 'Medium', 'Low'] %}
+                        <option value="{{ sv }}" {% if filters.severity == sv %}selected{% endif %}>{{ sv }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-cyber w-100">Filter</button>
+                    <a href="{{ url_for('investigation.list_cases') }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-rotate-left"></i></a>
+                </div>
+            </form>
+        </div>
+
+        {% if cases %}
+        <div class="d-grid gap-3">
+            {% for c in cases %}
+            <div class="glass-card glass-card-interactive p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                    <div>
+                        <span class="font-mono small text-cyan fw-bold me-2">{{ c.case_uid }}</span>
+                        <span class="badge {% if c.severity == 'Critical' %}bg-danger{% elif c.severity == 'High' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %} me-1">
+                            {{ c.severity }} Severity
+                        </span>
+                        <span class="badge bg-dark border border-secondary text-light">{{ c.status }}</span>
+                        <span class="badge bg-primary bg-opacity-25 text-info ms-1">{{ c.category }}</span>
+                    </div>
+                    <div class="small text-muted">
+                        Updated {{ c.updated_at.strftime('%Y-%m-%d %H:%M UTC') }}
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-white mb-2">
+                    <a href="{{ url_for('investigation.case_detail', case_id=c.id) }}" class="text-white text-decoration-none">{{ c.title }}</a>
+                </h5>
+                <p class="text-secondary small mb-3">{{ c.description or 'No description provided.' }}</p>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25">
+                    <div class="small text-secondary">
+                        <span class="me-3"><i class="fa-solid fa-microscope text-cyan me-1"></i><strong>{{ c.evidence.count() }}</strong> Evidence Artifacts</span>
+                        <span><i class="fa-solid fa-clipboard-list text-info me-1"></i><strong>{{ c.notes.count() }}</strong> Analyst Notes</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('investigation.case_detail', case_id=c.id) }}" class="btn btn-sm btn-outline-cyber">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>Open Case Workspace
+                        </a>
+                        <form method="POST" action="{{ url_for('investigation.delete_case', case_id=c.id) }}" class="confirm-delete-form m-0"
+                              data-confirm-message="Delete investigation case {{ c.case_uid }} and all attached evidence?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Case">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="glass-card p-5 text-center">
+            <i class="fa-solid fa-diagram-project fs-1 text-muted mb-3"></i>
+            <h5 class="text-white">No Investigation Cases Found</h5>
+            <p class="text-secondary small mb-0">Use the form on the left to initialize your first multi-evidence cyber investigation case.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

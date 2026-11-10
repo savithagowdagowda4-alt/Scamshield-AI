@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ScamShield AI — Multi-Channel Scam Detection & Investigation Platform{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Cybersecurity SaaS Theme -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- A. Animated Digital Network & Glowing Bubbles Background Canvas -->
+    <canvas id="cyberBgCanvas" aria-hidden="true"></canvas>
+
+    <!-- H. Smart Notification Toast Stack -->
+    <div id="smartToastStack" class="smart-toast-container" aria-live="polite"></div>
+
+    <!-- Loading Overlay for AI/ML Analysis -->
+    <div id="scanLoadingOverlay" class="scan-loading-overlay">
+        <div class="glass-card p-4 text-center" style="max-width: 440px;">
+            <div class="spinner-border text-info mb-3" style="width: 3.2rem; height: 3.2rem;" role="status"></div>
+            <h5 class="fw-bold text-white mb-2">Running Hybrid AI/ML &amp; Heuristic Engine...</h5>
+            <p class="text-secondary small mb-0">
+                Tokenizing text, computing TF-IDF vectors, evaluating ensemble probability, and checking static security indicators.
+            </p>
+        </div>
+    </div>
+
+    {% if current_user.is_authenticated %}
+    {% set cur_ch = request.args.get('channel', '') %}
+    <div class="app-wrapper">
+        <!-- PERMANENT FIXED LEFT SIDEBAR (KisanSetu 2.0 Reference Architecture) -->
+        <aside id="appSidebar" class="sidebar">
+            <div class="d-flex align-items-center justify-content-between pe-2">
+                <a href="{{ url_for('dashboard.index') }}" class="sidebar-brand">
+                    <div class="brand-shield">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-white fs-5 lh-1">ScamShield <span class="text-cyan">AI</span></div>
+                        <small class="text-info fw-semibold" style="font-size: 0.68rem; letter-spacing: 0.06em;">CYBER DEFENSE SUITE</small>
+                    </div>
+                </a>
+                <button id="closeSidebarBtn" class="btn btn-sm btn-outline-secondary d-lg-none border-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Command Center</div>
+                <a href="{{ url_for('dashboard.index') }}" class="sidebar-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="nav-section-title mt-2">Detection Scanners</div>
+                <a href="{{ url_for('analyzer.hub', channel='sms') }}" class="sidebar-link {% if request.endpoint == 'analyzer.hub' and (cur_ch == 'sms' or not cur_ch) %}active{% endif %}">
+                    <i class="fa-solid fa-comment-sms"></i>
+                    <span>SMS Scanner</span>
+                </a>
+                <a href="{{ url_for('analyzer.hub', channel='email') }}" class="sidebar-link {% if request.endpoint == 'analyzer.hub' and cur_ch == 'email' %}active{% endif %}">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                    <span>Email Scanner</span>
+                </a>
+                <a href="{{ url_for('analyzer.hub', channel='url') }}" class="sidebar-link {% if request.endpoint == 'analyzer.hub' and cur_ch == 'url' %}active{% endif %}">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>URL Analyzer</span>
+                </a>
+                <a href="{{ url_for('analyzer.hub', channel='whatsapp') }}" class="sidebar-link {% if request.endpoint == 'analyzer.hub' and cur_ch == 'whatsapp' %}active{% endif %}">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>WhatsApp Analyzer</span>
+                </a>
+                <a href="{{ url_for('analyzer.hub', channel='social') }}" class="sidebar-link {% if request.endpoint == 'analyzer.hub' and cur_ch == 'social' %}active{% endif %}">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span>Social Media Analyzer</span>
+                </a>
+                <a href="{{ url_for('analyzer.hub', channel='payment') }}" class="sidebar-link {% if request.endpoint == 'analyzer.hub' and cur_ch == 'payment' %}active{% endif %}">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                    <span>Payment Request Analyzer</span>
+                </a>
+
+                <div class="nav-section-title mt-2">Forensics &amp; Logs</div>
+                <a href="{{ url_for('investigation.list_cases') }}" class="sidebar-link {% if request.endpoint and request.endpoint.startswith('investigation.') %}active{% endif %}">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>Investigation Center</span>
+                </a>
+                <a href="{{ url_for('analyzer.history') }}" class="sidebar-link {% if request.endpoint == 'analyzer.history' %}active{% endif %}">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Scan History</span>
+                </a>
+                <a href="{{ url_for('analyzer.reports') }}" class="sidebar-link {% if request.endpoint == 'analyzer.reports' %}active{% endif %}">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Reports</span>
+                </a>
+
+                <div class="nav-section-title mt-2">Account &amp; System</div>
+                <a href="{{ url_for('auth.profile') }}" class="sidebar-link {% if request.endpoint == 'auth.profile' %}active{% endif %}">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="{{ url_for('auth.settings') }}" class="sidebar-link {% if request.endpoint == 'auth.settings' %}active{% endif %}">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings</span>
+                </a>
+
+                <form action="{{ url_for('auth.logout') }}" method="POST" class="mt-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="sidebar-link w-100 text-start bg-transparent text-danger border-0">
+                        <i class="fa-solid fa-right-from-bracket text-danger"></i>
+                        <span class="fw-semibold">Logout</span>
+                    </button>
+                </form>
+            </nav>
+        </aside>
+
+        <!-- LARGE RIGHT-SIDE MAIN CONTENT AREA -->
+        <div class="main-content">
+            <header class="topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button id="mobileMenuBtn" class="btn btn-sm btn-outline-info d-lg-none">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div>
+                        <div class="fw-bold text-white fs-6">
+                            Welcome back, <span class="text-cyan">{{ current_user.full_name or current_user.username }}</span>
+                        </div>
+                        <div class="text-secondary" style="font-size: 0.76rem;">
+                            <i class="fa-solid fa-shield-check text-success me-1"></i>Overall Security Posture: <strong class="text-info">Hybrid AI/ML &amp; Rule Engine Active</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Quick Sound Mute/Unmute & Theme Toggles -->
+                    <button type="button" id="topSoundToggleBtn" class="btn btn-sm btn-outline-cyber" title="Toggle Sound Synthesizer (Mute / Unmute)">
+                        <i class="fa-solid fa-volume-high text-cyan"></i>
+                    </button>
+                    <button type="button" id="topThemeToggleBtn" class="btn btn-sm btn-outline-cyber" title="Switch Dark / Light Theme">
+                        <i class="fa-solid fa-circle-half-stroke"></i>
+                    </button>
+                    <a href="{{ url_for('analyzer.history') }}" class="btn btn-sm btn-outline-cyber position-relative" title="Security Alerts & Recent Detections">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                    </a>
+                    <a href="{{ url_for('auth.profile') }}" class="d-flex align-items-center gap-2 text-decoration-none ps-2 border-start border-secondary border-opacity-25">
+                        <div class="brand-shield" style="width: 34px; height: 34px; font-size: 0.9rem; border-radius: 8px;">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        <div class="d-none d-md-block text-start">
+                            <div class="fw-bold text-white small lh-1">{{ current_user.username }}</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">{{ current_user.role_title }}</small>
+                        </div>
+                    </a>
+                </div>
+            </header>
+
+            <main class="page-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show glass-card border-0 mb-4" role="alert">
+                                <i class="fa-solid {% if category == 'danger' %}fa-triangle-exclamation text-danger{% elif category == 'success' %}fa-circle-check text-success{% else %}fa-circle-info text-info{% endif %} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </main>
+
+            <footer class="px-4 py-3 border-top border-secondary border-opacity-10 text-secondary small d-flex flex-wrap justify-content-between align-items-center">
+                <div>
+                    <strong>ScamShield AI</strong> — Multi-Channel Scam Detection &amp; Investigation Platform
+                </div>
+                <div class="text-muted" style="font-size: 0.78rem;">
+                    <i class="fa-solid fa-scale-balanced me-1 text-info"></i>Probabilistic AI/ML &amp; rule analysis is never 100% accurate. Always verify independently.
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- E. Floating Animated AI Assistant Orb & Drawer -->
+    <button type="button" id="aiAssistantOrb" class="ai-orb-trigger" title="Open ScamShield AI Voice & Text Assistant">
+        <i class="fa-solid fa-robot"></i>
+    </button>
+
+    <div id="aiAssistantPanel" class="ai-assistant-panel">
+        <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center" style="background: linear-gradient(90deg, rgba(0, 102, 255, 0.35), rgba(0, 212, 255, 0.12));">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-brain text-cyan"></i>
+                <div>
+                    <div class="fw-bold text-white small lh-1">ScamShield AI Copilot</div>
+                    <small class="text-info" style="font-size: 0.68rem;">Voice &amp; Text Threat Assistant</small>
+                </div>
+            </div>
+            <button type="button" id="closeAiAssistantBtn" class="btn btn-sm btn-link text-secondary p-0">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div id="aiAssistantChatLog" class="p-3 overflow-y-auto" style="height: 250px;">
+            <div class="p-2 px-3 rounded-3 bg-dark border border-info border-opacity-25 text-secondary small mb-2">
+                Hello! I am your <strong>ScamShield AI Assistant</strong>. Ask me about UPI PIN scams, phishing URLs, Digital Arrest calls, or click the microphone to speak.
+            </div>
+        </div>
+
+        <form id="aiAssistantForm" class="p-2 border-top border-secondary border-opacity-25 d-flex gap-1">
+            <button type="button" id="aiAssistantMicBtn" class="btn btn-sm btn-outline-info" title="Voice Input">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+            <input type="text" id="aiAssistantInput" class="form-control form-control-sm" placeholder="Ask about a scam or feature..." required>
+            <button type="submit" class="btn btn-sm btn-cyber">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+    {% else %}
+        <main class="container py-5">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="row justify-content-center">
+                        <div class="col-md-8 col-lg-6">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show glass-card mb-3" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block auth_content %}{% endblock %}
+        </main>
+    {% endif %}
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <!-- Main Application JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

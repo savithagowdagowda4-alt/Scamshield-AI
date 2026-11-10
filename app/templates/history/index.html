@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Scan History & Audit Logs — ScamShield AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-clock-rotate-left text-cyan me-2"></i>Scan History &amp; Forensic Logs</h3>
+        <p class="text-secondary small mb-0">Search, filter, inspect, export PDF reports, or remove records from your private analyst history.</p>
+    </div>
+    <a href="{{ url_for('analyzer.hub') }}" class="btn btn-cyber mt-2 mt-md-0">
+        <i class="fa-solid fa-plus me-1"></i>New Threat Scan
+    </a>
+</div>
+
+<!-- Filter & Search Bar -->
+<div class="glass-card p-3 mb-4">
+    <form method="GET" action="{{ url_for('analyzer.history') }}" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small mb-1">Keyword / Analysis ID Search</label>
+            <input type="text" name="q" class="form-control form-control-sm" placeholder="Search content, ID, sender..." value="{{ filters.q }}">
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <label class="form-label small mb-1">Channel</label>
+            <select name="channel" class="form-select form-select-sm">
+                <option value="">All Channels</option>
+                <option value="sms" {% if filters.channel == 'sms' %}selected{% endif %}>SMS</option>
+                <option value="email" {% if filters.channel == 'email' %}selected{% endif %}>Email</option>
+                <option value="url" {% if filters.channel == 'url' %}selected{% endif %}>URL</option>
+                <option value="whatsapp" {% if filters.channel == 'whatsapp' %}selected{% endif %}>WhatsApp</option>
+                <option value="social" {% if filters.channel == 'social' %}selected{% endif %}>Social Media</option>
+                <option value="payment" {% if filters.channel == 'payment' %}selected{% endif %}>Payment</option>
+            </select>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <label class="form-label small mb-1">Risk Level</label>
+            <select name="risk_level" class="form-select form-select-sm">
+                <option value="">All Risk Bands</option>
+                <option value="Critical Risk" {% if filters.risk_level == 'Critical Risk' %}selected{% endif %}>Critical Risk (75–100)</option>
+                <option value="High Risk" {% if filters.risk_level == 'High Risk' %}selected{% endif %}>High Risk (50–74)</option>
+                <option value="Medium Risk" {% if filters.risk_level == 'Medium Risk' %}selected{% endif %}>Medium Risk (25–49)</option>
+                <option value="Low Risk" {% if filters.risk_level == 'Low Risk' %}selected{% endif %}>Low Risk (0–24)</option>
+            </select>
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <label class="form-label small mb-1">From Date</label>
+            <input type="date" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}">
+        </div>
+        <div class="col-sm-6 col-md-2">
+            <label class="form-label small mb-1">To Date</label>
+            <input type="date" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}">
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+            <button type="submit" class="btn btn-sm btn-cyber w-100" title="Apply Filters">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+            <a href="{{ url_for('analyzer.history') }}" class="btn btn-sm btn-outline-secondary" title="Reset Filters">
+                <i class="fa-solid fa-rotate-left"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- History Table -->
+<div class="glass-card p-4">
+    {% if scans %}
+    <div class="table-responsive">
+        <table class="table table-cyber align-middle">
+            <thead>
+                <tr>
+                    <th>Analysis ID</th>
+                    <th>Timestamp (UTC)</th>
+                    <th>Channel</th>
+                    <th>Submitted Snippet &amp; Classification</th>
+                    <th>ML / Rule</th>
+                    <th>Risk Assessment</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in scans %}
+                <tr>
+                    <td class="font-mono small text-cyan fw-semibold">{{ s.analysis_uid }}</td>
+                    <td class="small text-secondary">{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <span class="badge bg-dark border border-secondary border-opacity-50 text-uppercase">{{ s.channel }}</span>
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-white small">{{ s.result.scam_type if s.result else 'N/A' }}</div>
+                        <div class="text-muted small text-truncate" style="max-width: 310px;">
+                            {% if s.subject_or_sender %}[{{ s.subject_or_sender }}] {% endif %}{{ s.submitted_content }}
+                        </div>
+                    </td>
+                    <td class="small font-mono text-secondary">
+                        {{ ((s.result.ml_probability if s.result else 0) * 100) | round(0) | int }}% / {{ s.result.rule_score if s.result else 0 }}p
+                    </td>
+                    <td>
+                        {% set rc = s.result.risk_category if s.result else 'Low Risk' %}
+                        <span class="risk-badge {% if rc == 'Critical Risk' %}risk-critical{% elif rc == 'High Risk' %}risk-high{% elif rc == 'Medium Risk' %}risk-medium{% else %}risk-low{% endif %}">
+                            {{ s.result.risk_score if s.result else 0 }}/100 &middot; {{ rc }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-1">
+                            <a href="{{ url_for('analyzer.view_result', scan_id=s.id) }}" class="btn btn-sm btn-outline-info" title="View Detailed Analysis">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('analyzer.download_pdf', scan_id=s.id) }}" class="btn btn-sm btn-outline-secondary" title="Download PDF Report">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('analyzer.delete_scan', scan_id=s.id) }}" class="confirm-delete-form m-0"
+                                  data-confirm-message="Are you sure you want to permanently delete scan {{ s.analysis_uid }}?">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Scan Record">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <nav class="mt-4 d-flex justify-content-between align-items-center">
+        <div class="small text-secondary">
+            Showing page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} matching records)
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link bg-dark border-secondary text-info" href="{{ url_for('analyzer.history', page=pagination.prev_num, **filters) }}">Previous</a>
+            </li>
+            {% endif %}
+            {% for p in pagination.iter_pages() %}
+                {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link bg-dark border-secondary text-white" href="{{ url_for('analyzer.history', page=p, **filters) }}">{{ p }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link bg-dark border-secondary text-info" href="{{ url_for('analyzer.history', page=pagination.next_num, **filters) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-folder-open fs-1 text-muted mb-3"></i>
+        <h5 class="text-white">No Matching Scan Records Found</h5>
+        <p class="text-secondary small">Try clearing your search filters or run a new multi-channel analysis.</p>
+        <a href="{{ url_for('analyzer.history') }}" class="btn btn-sm btn-outline-cyber me-2">Reset Filters</a>
+        <a href="{{ url_for('analyzer.hub') }}" class="btn btn-sm btn-cyber">Run New Scan</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

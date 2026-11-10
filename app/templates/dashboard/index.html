@@ -1,0 +1,650 @@
+{% extends 'base.html' %}
+{% block title %}Security Dashboard — ScamShield AI{% endblock %}
+
+{% block content %}
+<!-- Top Welcome & Overall Security Overview Banner -->
+<div class="glass-card p-4 mb-4" style="background: linear-gradient(135deg, rgba(0, 102, 255, 0.22), rgba(10, 17, 40, 0.88)); border: 1px solid rgba(0, 212, 255, 0.35);">
+    <div class="row align-items-center g-3">
+        <div class="col-lg-8">
+            <span class="badge bg-info text-dark fw-bold text-uppercase mb-2 px-3 py-1">
+                <i class="fa-solid fa-shield-halved me-1"></i>ScamShield AI Command Center
+            </span>
+            <h2 class="fw-bold text-white mb-1">
+                Multi-Channel Scam Detection &amp; Investigation Suite
+            </h2>
+            <p class="text-secondary mb-0">
+                Select any of the 9 core security modules below to analyze suspicious communications, correlate threat indicators, or export forensic PDF reports.
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <div class="d-inline-block p-3 rounded-3 text-start" style="background: rgba(6, 11, 25, 0.75); border: 1px solid rgba(0, 212, 255, 0.25);">
+                <div class="small text-muted text-uppercase fw-bold">Overall Security Overview</div>
+                <div class="fs-5 fw-bold text-cyan mt-1">
+                    <i class="fa-solid fa-circle-check text-success me-1"></i>96.4% CV F1 Engine Active
+                </div>
+                <div class="small text-secondary">Average Scan Risk: <strong class="text-white">{{ stats.avg_risk }}/100</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FUTURISTIC AI SHIELD, LIVE CYBER RADAR & VOICE WAVE VISUALIZER DECK -->
+<div class="row g-4 mb-4">
+    <!-- B. Futuristic Animated AI Shield -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card p-4 h-100 text-center d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-uppercase text-cyan"><i class="fa-solid fa-shield-halved me-1"></i>Futuristic AI Shield</span>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-info py-0 px-2" onclick="document.getElementById('dashboardAiShield').setAttribute('data-shield-state','normal'); document.getElementById('shieldStateLabel').textContent='NORMAL GUARD'; window.scamShieldAudio.play('low_risk');">Normal</button>
+                    <button type="button" class="btn btn-outline-info py-0 px-2" onclick="document.getElementById('dashboardAiShield').setAttribute('data-shield-state','scanning'); document.getElementById('shieldStateLabel').textContent='ACTIVE SCANNING'; window.scamShieldAudio.play('scanner');">Scan</button>
+                    <button type="button" class="btn btn-outline-danger py-0 px-2" onclick="document.getElementById('dashboardAiShield').setAttribute('data-shield-state','warning'); document.getElementById('shieldStateLabel').textContent='THREAT WARNING'; window.scamShieldAudio.play('critical_risk');">Alert</button>
+                </div>
+            </div>
+
+            <div id="dashboardAiShield" class="ai-shield-wrapper my-2" data-shield-state="{{ 'warning' if stats.critical_count > 0 else 'normal' }}">
+                <div class="shield-ring-outer"></div>
+                <div class="shield-ring-inner"></div>
+                <div class="shield-core">
+                    <div class="shield-scan-beam"></div>
+                    <i class="fa-solid fa-shield-virus fs-1 text-cyan mb-1"></i>
+                    <div class="small fw-bold text-white" style="font-size: 0.7rem;" id="shieldStateLabel">
+                        {{ 'THREAT WARNING' if stats.critical_count > 0 else 'NORMAL GUARD' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="small text-secondary mt-2">
+                State: <strong class="text-white">{{ stats.critical_count }} Critical</strong> &middot; <strong class="text-info">{{ stats.total_scans }} Scans Protected</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- C. Live Cyber Radar Connected to Actual Analysis Records -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card p-4 h-100 text-center d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-uppercase text-cyan"><i class="fa-solid fa-satellite-dish me-1"></i>Live Cyber Radar</span>
+                <span class="badge bg-dark border border-info border-opacity-50 text-info">Connected to DB ({{ radar_blips | length }} Blips)</span>
+            </div>
+
+            <div class="cyber-radar-box my-2">
+                <div class="radar-sweep-beam"></div>
+                {% for blip in radar_blips %}
+                {% set rad = (blip.radius_pct * 0.42) %}
+                <div class="radar-blip {% if blip.score >= 75 %}blip-critical{% elif blip.score >= 50 %}blip-high{% elif blip.score >= 25 %}blip-medium{% else %}blip-low{% endif %}"
+                     style="top: calc(50% - {{ (rad * 0.7) | round(1) }}%); left: calc(50% + {{ ((loop.index0 % 2 == 0 and 1 or -1) * (rad * 0.65)) | round(1) }}%);"
+                     title="{{ blip.uid }} ({{ blip.channel }}): {{ blip.score }}/100 - {{ blip.category }}">
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="small text-secondary mt-2">
+                Plotting <strong class="text-white">real database scans only</strong> — zero fake threat points.
+            </div>
+        </div>
+    </div>
+
+    <!-- F. Voice Wave Visualizer & Audio Transcript Scam Scanner -->
+    <div class="col-md-12 col-xl-4">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-uppercase text-cyan"><i class="fa-solid fa-wave-square me-1"></i>Voice Wave Scam Analyzer</span>
+                    <span class="font-mono small text-warning fw-bold" id="voiceRecordTimer">00:00</span>
+                </div>
+                <div class="small text-secondary mb-2" id="voiceRecordStatus">
+                    Click <strong>Start Mic</strong> to analyze live voice calls (requests mic only on click).
+                </div>
+                <canvas id="voiceWaveformCanvas" width="320" height="64" class="w-100 rounded-3 mb-2" style="background: rgba(6, 11, 25, 0.85); border: 1px solid rgba(0, 212, 255, 0.25);"></canvas>
+            </div>
+
+            <form method="POST" action="{{ url_for('analyzer.run_scan') }}" class="scam-scan-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="channel" value="whatsapp">
+                <input type="hidden" name="subject_or_sender" value="Voice Call Transcript Analysis">
+                <textarea id="voiceTranscriptText" name="content" rows="2" class="form-control form-control-sm mb-2 font-mono" placeholder="Recorded speech or pasted call transcript appears here..." required></textarea>
+                <div class="d-flex gap-2">
+                    <button type="button" id="startVoiceWaveBtn" class="btn btn-sm btn-outline-cyber flex-grow-1">
+                        <i class="fa-solid fa-microphone me-1"></i>Start Mic
+                    </button>
+                    <button type="button" id="stopVoiceWaveBtn" class="btn btn-sm btn-outline-danger" disabled>
+                        <i class="fa-solid fa-stop"></i>
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-cyber flex-grow-1">
+                        <i class="fa-solid fa-magnifying-glass-chart me-1"></i>Analyze Voice
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 4 Overview Analytics Cards (Total Scans, Critical Risk, High Risk, Safe / Low Risk) -->
+<div class="row g-4 mb-5">
+    <div class="col-sm-6 col-xl-3">
+        <div class="glass-card glass-card-interactive p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-secondary small fw-bold text-uppercase">Total Scans</div>
+                    <div class="display-6 fw-bold text-white mt-1">{{ stats.total_scans }}</div>
+                    <div class="small text-info fw-semibold mt-1">
+                        <i class="fa-solid fa-layer-group me-1"></i>Across 6 Channels
+                    </div>
+                </div>
+                <div class="stat-icon-box" style="width: 56px; height: 56px; font-size: 1.5rem; background: rgba(0, 102, 255, 0.2); color: #38bdf8;">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="glass-card glass-card-interactive p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-secondary small fw-bold text-uppercase">Critical Risk</div>
+                    <div class="display-6 fw-bold text-danger mt-1">{{ stats.critical_count }}</div>
+                    <div class="small text-danger fw-semibold mt-1">
+                        Score Band: 75–100 / 100
+                    </div>
+                </div>
+                <div class="stat-icon-box" style="width: 56px; height: 56px; font-size: 1.5rem; background: rgba(239, 68, 68, 0.2); color: #f87171;">
+                    <i class="fa-solid fa-skull-crossbones"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="glass-card glass-card-interactive p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-secondary small fw-bold text-uppercase">High Risk</div>
+                    <div class="display-6 fw-bold text-warning mt-1">{{ stats.high_count }}</div>
+                    <div class="small text-warning fw-semibold mt-1">
+                        Score Band: 50–74 ({{ stats.medium_count }} Medium)
+                    </div>
+                </div>
+                <div class="stat-icon-box" style="width: 56px; height: 56px; font-size: 1.5rem; background: rgba(249, 115, 22, 0.2); color: #fb923c;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="glass-card glass-card-interactive p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-secondary small fw-bold text-uppercase">Safe / Low Risk</div>
+                    <div class="display-6 fw-bold text-success mt-1">{{ stats.low_count }}</div>
+                    <div class="small text-success fw-semibold mt-1">
+                        Score Band: 0–24 / 100
+                    </div>
+                </div>
+                <div class="stat-icon-box" style="width: 56px; height: 56px; font-size: 1.5rem; background: rgba(16, 185, 129, 0.2); color: #34d399;">
+                    <i class="fa-solid fa-shield-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LARGE 3-COLUMN FEATURE CARDS GRID (KisanSetu 2.0 Reference Structure: 9 Spacious Cards) -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-white mb-0">
+        <i class="fa-solid fa-grip text-cyan me-2"></i>Core Detection &amp; Investigation Modules
+    </h4>
+    <span class="text-secondary small">Click any module card to launch its dedicated workspace</span>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- 1. SMS Scam Detection -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4);">
+                        <i class="fa-solid fa-comment-sms"></i>
+                    </div>
+                    <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-1">
+                        Channel 01 &middot; Active
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">1. SMS Scam Detection</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Analyze text messages for urgent bank KYC suspension lures, utility disconnection threats, parcel delivery holds, and OTP credential harvesting.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-bolt me-1"></i>NLP + Smishing Rules</span>
+                <a href="{{ url_for('analyzer.hub', channel='sms') }}" class="btn btn-cyber px-4">
+                    Open Scanner <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Email Scam Detection -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4);">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                    </div>
+                    <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-1">
+                        Channel 02 &middot; Active
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">2. Email Scam Detection</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Inspect email subjects, sender domains, Business Email Compromise (BEC) invoice wire changes, executive gift-card demands, and phishing pretexts.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-at me-1"></i>BEC &amp; Spoofing Check</span>
+                <a href="{{ url_for('analyzer.hub', channel='email') }}" class="btn btn-cyber px-4">
+                    Open Scanner <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. URL Security Analyzer -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4);">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 px-3 py-1">
+                        100% Static &amp; Safe
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">3. URL Security Analyzer</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Perform non-executing static inspection for HTTPS encryption, raw IPv4 hostnames, Punycode homographs (`xn--`), risky TLDs, and brand spoofing.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-lock me-1"></i>Zero Live Execution</span>
+                <a href="{{ url_for('analyzer.hub', channel='url') }}" class="btn btn-cyber px-4">
+                    Open Analyzer <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. WhatsApp Message Analyzer -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-1">
+                        Channel 04 &middot; Active
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">4. WhatsApp Message Analyzer</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Identify part-time YouTube/Telegram prepaid task scams, fake institutional stock trading groups, "Digital Arrest" threats, and family emergency lures.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-shield-virus me-1"></i>Task &amp; Impersonation</span>
+                <a href="{{ url_for('analyzer.hub', channel='whatsapp') }}" class="btn btn-cyber px-4">
+                    Open Analyzer <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Social Media Scam Detection -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4);">
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </div>
+                    <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-1">
+                        Channel 05 &middot; Active
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">5. Social Media Scam Detection</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Detect fake Instagram/Meta copyright suspension DMs, Bitcoin giveaway doublers, NFT seed-phrase drainers, and fake brand ambassador offers.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-hashtag me-1"></i>DM &amp; Giveaway Guard</span>
+                <a href="{{ url_for('analyzer.hub', channel='social') }}" class="btn btn-cyber px-4">
+                    Open Scanner <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Payment Request Analyzer -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);">
+                        <i class="fa-solid fa-money-bill-transfer"></i>
+                    </div>
+                    <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25 px-3 py-1">
+                        UPI &amp; Wire Guard
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">6. Payment Request Analyzer</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Flag deceptive OLX/Marketplace UPI collect requests ("enter UPI PIN to receive money"), QR code cashback tricks, and AnyDesk remote refund fraud.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-qrcode me-1"></i>UPI PIN Protection</span>
+                <a href="{{ url_for('analyzer.hub', channel='payment') }}" class="btn btn-cyber px-4">
+                    Open Analyzer <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. AI Investigation Center -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(0, 212, 255, 0.2); color: #00d4ff; border: 1px solid rgba(0, 212, 255, 0.4);">
+                        <i class="fa-solid fa-diagram-project"></i>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-1">
+                        {{ stats.total_cases }} Active Case(s)
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">7. AI Investigation Center</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Create multi-artifact investigation cases, correlate shared phone numbers, domains, and UPI handles across channels, and build forensic timelines.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-network-wired me-1"></i>Entity Graph</span>
+                <a href="{{ url_for('investigation.list_cases') }}" class="btn btn-cyber px-4">
+                    Open Center <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Scan History -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-1">
+                        {{ stats.total_scans }} Saved Logs
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">8. Scan History</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Search, filter, and audit all historical threat analyses by keyword, input channel, risk level, or date range with full user data isolation.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-filter me-1"></i>Search &amp; Filter</span>
+                <a href="{{ url_for('analyzer.history') }}" class="btn btn-cyber px-4">
+                    View Details <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. Security Reports -->
+    <div class="col-md-6 col-xl-4">
+        <div class="glass-card glass-card-interactive futuristic-card-3d p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-icon-box" style="width: 60px; height: 60px; font-size: 1.65rem; background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 px-3 py-1">
+                        PDF Export Ready
+                    </span>
+                </div>
+                <h4 class="fw-bold text-white mb-2">9. Security Reports</h4>
+                <p class="text-secondary mb-3" style="line-height: 1.6;">
+                    Generate and download branded ReportLab PDF forensic reports containing defanged content, risk scores, security indicators, and safety actions.
+                </p>
+            </div>
+            <div class="pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="small text-cyan fw-semibold"><i class="fa-solid fa-download me-1"></i>Local PDF Engine</span>
+                <a href="{{ url_for('analyzer.reports') }}" class="btn btn-cyber px-4">
+                    Open Reports <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Analytics Charts Row (Risk Distribution, Scam Categories, Weekly Scan Activity) -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-chart-pie text-cyan me-2"></i>Risk Distribution</h5>
+            <div style="height: 240px; position: relative;">
+                <canvas id="riskDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-layer-group text-cyan me-2"></i>Scam Categories</h5>
+            <div style="height: 240px; position: relative;">
+                <canvas id="scamCategoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-chart-line text-cyan me-2"></i>Weekly Scan Activity</h5>
+            <div style="height: 240px; position: relative;">
+                <canvas id="weeklyTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity & Active Investigations Row -->
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-list-ul text-cyan me-2"></i>Recent Multi-Channel Scans</h5>
+                <a href="{{ url_for('analyzer.history') }}" class="btn btn-sm btn-outline-cyber">View All History</a>
+            </div>
+
+            {% if recent_scans %}
+            <div class="table-responsive">
+                <table class="table table-cyber align-middle">
+                    <thead>
+                        <tr>
+                            <th>Analysis ID</th>
+                            <th>Channel</th>
+                            <th>Classification</th>
+                            <th>Risk Score</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in recent_scans %}
+                        <tr>
+                            <td class="font-mono small text-cyan">{{ s.analysis_uid }}</td>
+                            <td>
+                                <span class="badge bg-dark border border-secondary border-opacity-50 text-uppercase">{{ s.channel }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-white small">{{ s.result.scam_type if s.result else 'N/A' }}</div>
+                                <div class="text-muted small text-truncate" style="max-width: 220px;">{{ s.submitted_content }}</div>
+                            </td>
+                            <td>
+                                {% set rc = s.result.risk_category if s.result else 'Low Risk' %}
+                                <span class="risk-badge {% if rc == 'Critical Risk' %}risk-critical{% elif rc == 'High Risk' %}risk-high{% elif rc == 'Medium Risk' %}risk-medium{% else %}risk-low{% endif %}">
+                                    {{ s.result.risk_score if s.result else 0 }}/100 &middot; {{ rc.replace(' Risk', '') }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('analyzer.view_result', scan_id=s.id) }}" class="btn btn-sm btn-outline-info" title="Inspect Report">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('analyzer.download_pdf', scan_id=s.id) }}" class="btn btn-sm btn-outline-secondary ms-1" title="Download PDF">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-bolt-lightning text-cyan me-2"></i>Recent SOC Activity Stream</h5>
+                <a href="{{ url_for('investigation.list_cases') }}" class="btn btn-sm btn-outline-cyber">Investigation Cases</a>
+            </div>
+            {% if activity_feed %}
+                <div class="cyber-timeline">
+                    {% for item in activity_feed %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <a href="{{ item.url }}" class="text-decoration-none d-block">
+                            <div class="small fw-semibold text-white">{{ item.title }}</div>
+                            <div class="small text-secondary">{{ item.subtitle }}</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">
+                                {{ item.timestamp.strftime('%Y-%m-%d %H:%M UTC') if item.timestamp else '' }}
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {{ chart_data | tojson }};
+
+    // 1. Risk Band Doughnut Chart
+    const riskCtx = document.getElementById('riskDistributionChart');
+    if (riskCtx) {
+        new Chart(riskCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Low Risk (0-24)', 'Medium Risk (25-49)', 'High Risk (50-74)', 'Critical Risk (75-100)'],
+                datasets: [{
+                    data: chartData.risk_distribution,
+                    backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#ef4444'],
+                    borderColor: '#0a1128',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#cbd5e1', padding: 10, font: { size: 11 } } }
+                },
+                cutout: '62%'
+            }
+        });
+    }
+
+    // 2. Scam Category Horizontal Bar Chart
+    const catCtx = document.getElementById('scamCategoryChart');
+    if (catCtx) {
+        new Chart(catCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.scam_type_labels,
+                datasets: [{
+                    label: 'Detections',
+                    data: chartData.scam_type_values,
+                    backgroundColor: 'rgba(0, 212, 255, 0.65)',
+                    borderColor: '#00d4ff',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                    y: { ticks: { color: '#e2e8f0', font: { size: 10 } }, grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // 3. Weekly Trend Line Chart
+    const weeklyCtx = document.getElementById('weeklyTrendChart');
+    if (weeklyCtx) {
+        new Chart(weeklyCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.weekly_labels,
+                datasets: [
+                    {
+                        label: 'Total Scans',
+                        data: chartData.weekly_totals,
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.15)',
+                        fill: true,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'High / Critical',
+                        data: chartData.weekly_high_risk,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                        fill: true,
+                        tension: 0.35
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 11 } } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

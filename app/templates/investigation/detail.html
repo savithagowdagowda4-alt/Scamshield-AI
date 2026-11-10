@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% block title %}{{ case.case_uid }} — Investigation Workspace{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-3">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <a href="{{ url_for('investigation.list_cases') }}" class="text-cyan text-decoration-none small">
+                <i class="fa-solid fa-arrow-left me-1"></i>All Cases
+            </a>
+            <span class="text-muted">/</span>
+            <span class="font-mono small text-cyan fw-bold">{{ case.case_uid }}</span>
+            <span class="badge {% if case.severity == 'Critical' %}bg-danger{% elif case.severity == 'High' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                {{ case.severity }} Severity
+            </span>
+            <span class="badge bg-dark border border-info text-info">{{ case.status }}</span>
+        </div>
+        <h3 class="fw-bold text-white mb-1">{{ case.title }}</h3>
+        <p class="text-secondary small mb-0">{{ case.description }}</p>
+    </div>
+
+    <!-- Update Status & Severity Form -->
+    <form method="POST" action="{{ url_for('investigation.update_status', case_id=case.id) }}" class="glass-card p-2 px-3 d-flex flex-wrap align-items-center gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <select name="status" class="form-select form-select-sm" style="width: auto;">
+            {% for st in ['Open', 'In Progress', 'Escalated', 'Resolved', 'Closed'] %}
+            <option value="{{ st }}" {% if case.status == st %}selected{% endif %}>Status: {{ st }}</option>
+            {% endfor %}
+        </select>
+        <select name="severity" class="form-select form-select-sm" style="width: auto;">
+            {% for sv in ['Critical', 'High', 'Medium', 'Low'] %}
+            <option value="{{ sv }}" {% if case.severity == sv %}selected{% endif %}>Severity: {{ sv }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-sm btn-cyber">Update Case</button>
+    </form>
+</div>
+
+<!-- Genuine Entity Correlation Engine Banner -->
+<div class="glass-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-white mb-0">
+            <i class="fa-solid fa-network-wired text-cyan me-2"></i>Cross-Artifact Entity Correlation Graph
+        </h5>
+        <span class="badge bg-dark border border-info border-opacity-50 text-info">
+            Real Database Entity Matching — Zero Fabricated Links
+        </span>
+    </div>
+
+    {% if correlations.has_shared_links %}
+    <div class="alert alert-warning bg-warning bg-opacity-10 border border-warning border-opacity-50 text-white mb-3">
+        <i class="fa-solid fa-link text-warning me-2"></i>
+        <strong>{{ correlations.shared_correlations | length }} Shared Threat Indicator(s) Discovered Across Multiple Evidence Artifacts!</strong>
+    </div>
+    <div class="row g-3">
+        {% for corr in correlations.shared_correlations %}
+        <div class="col-md-6">
+            <div class="p-3 rounded-3 h-100" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35);">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="badge bg-danger">{{ corr.entity_type }}</span>
+                    <span class="small text-warning fw-bold">Shared in {{ corr.count }} Artifacts</span>
+                </div>
+                <div class="font-mono fw-bold text-white fs-6 my-1">{{ corr.entity_value }}</div>
+                <div class="small text-secondary">{{ corr.summary }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="p-3 rounded-3 text-secondary small" style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(148, 163, 184, 0.15);">
+        <i class="fa-solid fa-circle-check text-info me-2"></i>
+        No shared domains, phone numbers, email addresses, or UPI handles currently overlap across 2+ evidence pieces in this case. Add related artifacts below to automatically compute overlaps.
+    </div>
+    {% endif %}
+
+    {% if correlations.all_entities %}
+    <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+        <div class="small text-muted fw-semibold mb-2">All Extracted Entities in Case Locker ({{ correlations.all_entities | length }}):</div>
+        <div class="d-flex flex-wrap gap-2">
+            {% for ent in correlations.all_entities %}
+            <span class="badge bg-dark border {% if ent.count >= 2 %}border-danger text-danger{% else %}border-secondary text-secondary{% endif %} font-mono">
+                {{ ent.entity_type }}: {{ ent.entity_value }} ({{ ent.count }}x)
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Main Workspace Grid: Evidence Locker (Left) + Add Evidence / Notes / Timeline (Right) -->
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="glass-card p-4 mb-4">
+            <h5 class="fw-bold text-white mb-3">
+                <i class="fa-solid fa-microscope text-cyan me-2"></i>Evidence Locker ({{ evidence_items | length }} Artifacts)
+            </h5>
+
+            {% if evidence_items %}
+            <div class="d-grid gap-3">
+                {% for ev in evidence_items %}
+                <div class="p-3 rounded-3" style="background: rgba(8, 14, 32, 0.82); border: 1px solid rgba(0, 212, 255, 0.2);">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                        <div>
+                            <span class="badge bg-primary bg-opacity-25 text-info text-uppercase me-1">#{{ ev.id }} &middot; {{ ev.evidence_type }}</span>
+                            <strong class="text-white small">{{ ev.label }}</strong>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="risk-badge {% if ev.risk_score >= 75 %}risk-critical{% elif ev.risk_score >= 50 %}risk-high{% elif ev.risk_score >= 25 %}risk-medium{% else %}risk-low{% endif %}">
+                                Risk: {{ ev.risk_score }}/100
+                            </span>
+                            {% if ev.scan_id %}
+                            <a href="{{ url_for('analyzer.view_result', scan_id=ev.scan_id) }}" class="btn btn-sm btn-outline-info py-0 px-2" title="Open Full Scan Report">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('investigation.delete_evidence', case_id=case.id, evidence_id=ev.id) }}" class="confirm-delete-form m-0"
+                                  data-confirm-message="Remove evidence artifact #{{ ev.id }} from this case?">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Remove Artifact">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <pre class="p-2 rounded font-mono small text-secondary mb-2" style="background: rgba(4, 8, 20, 0.8); white-space: pre-wrap;">{{ ev.content }}</pre>
+
+                    {% set ev_ents = ev.extracted_entities %}
+                    <div class="d-flex flex-wrap justify-content-between align-items-center small text-muted">
+                        <div>
+                            {% for d in ev_ents.get('domains', []) %}
+                            <span class="badge bg-dark border border-warning border-opacity-50 text-warning font-mono me-1">domain:{{ d }}</span>
+                            {% endfor %}
+                            {% for p in ev_ents.get('phones', []) %}
+                            <span class="badge bg-dark border border-info border-opacity-50 text-info font-mono me-1">tel:{{ p }}</span>
+                            {% endfor %}
+                            {% for h in ev_ents.get('payment_handles', []) %}
+                            <span class="badge bg-dark border border-danger border-opacity-50 text-danger font-mono me-1">upi:{{ h }}</span>
+                            {% endfor %}
+                        </div>
+                        <div>Logged: {{ ev.source_timestamp or ev.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-secondary small">
+                No evidence artifacts attached yet. Link a saved scan or submit raw evidence on the right.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Chronological Investigation Timeline -->
+        <div class="glass-card p-4">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-timeline text-cyan me-2"></i>Forensic Investigation Timeline</h5>
+            <div class="cyber-timeline">
+                {% for ev_item in timeline %}
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-white small">{{ ev_item.title }}</span>
+                        <span class="text-muted" style="font-size: 0.74rem;">{{ ev_item.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span>
+                    </div>
+                    <p class="text-secondary small mb-0">{{ ev_item.detail }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Add Evidence & Analyst Notes -->
+    <div class="col-lg-5">
+        <!-- Link Existing Scan to Case -->
+        <div class="glass-card p-4 mb-4">
+            <h6 class="fw-bold text-white mb-3"><i class="fa-solid fa-link text-cyan me-2"></i>Attach Existing Scan from History</h6>
+            <form method="POST" action="{{ url_for('investigation.add_evidence', case_id=case.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <select name="scan_id" class="form-select form-select-sm" required>
+                        <option value="">-- Choose a saved scan record --</option>
+                        {% for s in user_scans %}
+                        <option value="{{ s.id }}">{{ s.analysis_uid }} | {{ s.channel | upper }} | Score: {{ s.result.risk_score if s.result else 0 }}/100</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <input type="text" name="label" class="form-control form-control-sm" placeholder="Custom label (optional)">
+                </div>
+                <button type="submit" class="btn btn-sm btn-cyber w-100">
+                    <i class="fa-solid fa-paperclip me-1"></i>Link Selected Scan
+                </button>
+            </form>
+        </div>
+
+        <!-- Add Raw Evidence Artifact -->
+        <div class="glass-card p-4 mb-4">
+            <h6 class="fw-bold text-white mb-3"><i class="fa-solid fa-plus-square text-info me-2"></i>Add New Raw Evidence Artifact</h6>
+            <form method="POST" action="{{ url_for('investigation.add_evidence', case_id=case.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row g-2 mb-2">
+                    <div class="col-5">
+                        <label class="form-label small mb-1">Channel Type</label>
+                        <select name="evidence_type" class="form-select form-select-sm">
+                            <option value="sms">SMS</option>
+                            <option value="email">Email</option>
+                            <option value="url">URL</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="social">Social Media</option>
+                            <option value="payment">Payment</option>
+                        </select>
+                    </div>
+                    <div class="col-7">
+                        <label class="form-label small mb-1">Artifact Label *</label>
+                        <input type="text" name="label" class="form-control form-control-sm" placeholder="e.g. Follow-up WhatsApp Demand" required>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1">Message / URL / Artifact Content *</label>
+                    <textarea name="content" rows="3" class="form-control form-control-sm" placeholder="Paste message, URL, phone number, or UPI handle..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-sm btn-outline-cyber w-100">
+                    <i class="fa-solid fa-microscope me-1"></i>Extract IoCs &amp; Add to Case
+                </button>
+            </form>
+        </div>
+
+        <!-- Analyst Investigation Notes -->
+        <div class="glass-card p-4">
+            <h6 class="fw-bold text-white mb-3"><i class="fa-solid fa-clipboard-check text-warning me-2"></i>Analyst Investigation Notes ({{ notes | length }})</h6>
+            <form method="POST" action="{{ url_for('investigation.add_note', case_id=case.id) }}" class="mb-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <select name="note_type" class="form-select form-select-sm">
+                        <option value="Observation">Observation</option>
+                        <option value="Correlation">Correlation Finding</option>
+                        <option value="Action Taken">Containment / Action Taken</option>
+                        <option value="Escalation">Escalation Note</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <textarea name="content" rows="3" class="form-control form-control-sm" placeholder="Record analyst findings, takedown requests, or victim guidance..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-sm btn-cyber w-100">
+                    <i class="fa-solid fa-pen-to-square me-1"></i>Log Investigation Note
+                </button>
+            </form>
+
+            {% if notes %}
+            <div class="d-grid gap-2">
+                {% for n in notes %}
+                <div class="p-2 px-3 rounded-3" style="background: rgba(6, 11, 25, 0.7); border-left: 3px solid #00d4ff;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary" style="font-size: 0.68rem;">{{ n.note_type }}</span>
+                        <span class="text-muted" style="font-size: 0.7rem;">{{ n.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+                    </div>
+                    <div class="small text-white mt-1">{{ n.content }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

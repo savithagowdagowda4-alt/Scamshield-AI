@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block title %}Engine & Workspace Settings — ScamShield AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-sliders text-cyan me-2"></i>Detection Engine &amp; Workspace Settings</h3>
+        <p class="text-secondary small mb-0">Configure default analysis channel, sensitivity calibration, and data retention policies.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="glass-card p-4">
+            <h5 class="fw-bold text-white mb-3">Analysis &amp; Sensitivity Preferences</h5>
+            <form method="POST" action="{{ url_for('auth.settings') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-4">
+                    <label class="form-label" for="default_channel">Default Analyzer Channel on Launch</label>
+                    <select class="form-select" id="default_channel" name="default_channel">
+                        <option value="sms" {% if current_user.default_channel == 'sms' %}selected{% endif %}>SMS Smishing Analyzer</option>
+                        <option value="email" {% if current_user.default_channel == 'email' %}selected{% endif %}>Email Phishing Analyzer</option>
+                        <option value="url" {% if current_user.default_channel == 'url' %}selected{% endif %}>Static URL Security Inspector</option>
+                        <option value="whatsapp" {% if current_user.default_channel == 'whatsapp' %}selected{% endif %}>WhatsApp Message Analyzer</option>
+                        <option value="social" {% if current_user.default_channel == 'social' %}selected{% endif %}>Social Media DM Analyzer</option>
+                        <option value="payment" {% if current_user.default_channel == 'payment' %}selected{% endif %}>Payment Request Analyzer</option>
+                    </select>
+                </div>
+
+                <div class="mb-4 p-3 rounded-3" style="background: rgba(0, 102, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.2);">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="strict_mode" name="strict_mode" value="1" {% if current_user.strict_mode %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold text-white" for="strict_mode">
+                            Enable Strict Heuristic Sensitivity (+12% Risk Multiplier)
+                        </label>
+                    </div>
+                    <p class="text-secondary small mb-0 mt-1">
+                        When enabled, borderline suspicious messages receive an additional sensitivity boost to reduce false negatives in high-security environments.
+                    </p>
+                </div>
+
+                <div class="mb-4 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(148, 163, 184, 0.15);">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="email_alerts" name="email_alerts" value="1" {% if current_user.email_alerts %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold text-white" for="email_alerts">
+                            Flag High &amp; Critical Scans in Priority SOC Banner
+                        </label>
+                    </div>
+                    <p class="text-secondary small mb-0 mt-1">
+                        Highlights Critical Risk (75–100) detections for immediate investigation case escalation.
+                    </p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label" for="auto_archive_days">Audit Log Retention Window (Days)</label>
+                    <input type="number" class="form-control" id="auto_archive_days" name="auto_archive_days" min="7" max="365" value="{{ current_user.auto_archive_days }}">
+                </div>
+
+                <button type="submit" class="btn btn-cyber">
+                    <i class="fa-solid fa-check-double me-2"></i>Save Engine Configuration
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <!-- I & D. Custom Appearance & Futuristic Sound Synthesizer Settings -->
+        <div class="glass-card p-4 mb-4">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-wand-magic-sparkles text-cyan me-2"></i>Appearance, Animation &amp; Sound Experience</h5>
+
+            <div class="mb-3">
+                <label class="form-label" for="prefThemeSelect">Interface Theme Mode</label>
+                <select id="prefThemeSelect" class="form-select">
+                    <option value="dark">Dark Navy Cybersecurity Mode (Default)</option>
+                    <option value="light">High-Contrast Light Analyst Mode</option>
+                </select>
+            </div>
+
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="prefAnimSwitch" checked>
+                <label class="form-check-label text-white small fw-semibold" for="prefAnimSwitch">
+                    Enable UI Animations &amp; 3D Card Motion (Off = Reduced Motion)
+                </label>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="prefBgSwitch" checked>
+                <label class="form-check-label text-white small fw-semibold" for="prefBgSwitch">
+                    Enable Animated Digital Network &amp; Glowing Bubbles Background
+                </label>
+            </div>
+
+            <hr class="border-secondary border-opacity-25 my-3">
+
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="prefSoundSwitch" checked>
+                <label class="form-check-label text-white small fw-semibold" for="prefSoundSwitch">
+                    Enable Futuristic Web Audio Sound Effects (Mute / Unmute)
+                </label>
+            </div>
+
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="prefVoiceSwitch" checked>
+                <label class="form-check-label text-white small fw-semibold" for="prefVoiceSwitch">
+                    Enable Spoken AI Voice Assistant Replies
+                </label>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="prefAmbientSwitch">
+                <label class="form-check-label text-white small fw-semibold" for="prefAmbientSwitch">
+                    Enable Optional Ambient SOC Background Hum
+                </label>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label d-flex justify-content-between" for="prefVolumeRange">
+                    <span>Master Audio Volume</span>
+                    <span class="text-cyan small">Safe Controlled Level</span>
+                </label>
+                <input type="range" class="form-range" id="prefVolumeRange" min="0" max="100" value="45">
+            </div>
+
+            <div class="small text-secondary fw-semibold mb-2">Sound Effect Preview Deck (User-Initiated Only):</div>
+            <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-sm btn-outline-cyber" onclick="window.scamShieldAudio.play('startup')">1. Startup</button>
+                <button type="button" class="btn btn-sm btn-outline-cyber" onclick="window.scamShieldAudio.play('scanner')">2. Scanner</button>
+                <button type="button" class="btn btn-sm btn-outline-cyber" onclick="window.scamShieldAudio.play('complete')">3. Complete</button>
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="window.scamShieldAudio.play('low_risk')">4. Low Risk</button>
+                <button type="button" class="btn btn-sm btn-outline-warning" onclick="window.scamShieldAudio.play('high_risk')">5. High Risk</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.scamShieldAudio.play('critical_risk')">6. Critical Alert</button>
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="window.scamShieldAudio.speak('ScamShield AI voice assistant online and ready.')">7. AI Voice</button>
+            </div>
+        </div>
+
+        <div class="glass-card p-4">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-brain text-cyan me-2"></i>AI/ML Model Transparency Card</h5>
+            <p class="text-secondary small">
+                ScamShield AI uses a genuine local Scikit-learn machine learning pipeline paired with deterministic channel rules.
+            </p>
+            <ul class="list-unstyled small text-secondary mb-4">
+                <li class="mb-2"><i class="fa-solid fa-check text-info me-2"></i><strong class="text-white">Vectorizer:</strong> TF-IDF (1–2 n-grams, sublinear scaling, structural meta-tokens)</li>
+                <li class="mb-2"><i class="fa-solid fa-check text-info me-2"></i><strong class="text-white">Classifier:</strong> Soft-Voting Ensemble (Logistic Regression + Random Forest)</li>
+                <li class="mb-2"><i class="fa-solid fa-check text-info me-2"></i><strong class="text-white">URL Safety:</strong> 100% static parsing — never visits or executes submitted links</li>
+                <li class="mb-2"><i class="fa-solid fa-check text-info me-2"></i><strong class="text-white">Risk Bands:</strong> Low (0–24), Medium (25–49), High (50–74), Critical (75–100)</li>
+            </ul>
+            <div class="p-3 rounded-3 small text-warning" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                <strong>Dataset Scope &amp; Limitations:</strong> The local classifier is trained on a curated 102-sample multi-channel demonstration corpus. Novel zero-day scams may evade statistical vocabulary matching; always combine scores with out-of-band human verification.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

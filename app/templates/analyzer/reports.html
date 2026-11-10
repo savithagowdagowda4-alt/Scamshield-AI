@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Security Reports — ScamShield AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-white mb-1"><i class="fa-solid fa-file-shield text-cyan me-2"></i>Security Forensic Reports Center</h2>
+        <p class="text-secondary mb-0">Download official, safely defanged ReportLab PDF forensic reports for your multi-channel threat scans.</p>
+    </div>
+    <a href="{{ url_for('analyzer.hub') }}" class="btn btn-cyber">
+        <i class="fa-solid fa-plus me-2"></i>New Threat Analysis
+    </a>
+</div>
+
+<div class="row g-4">
+    {% if scans %}
+        {% for s in scans %}
+        <div class="col-md-6 col-xl-4">
+            <div class="glass-card glass-card-interactive p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="font-mono small text-cyan fw-bold">{{ s.analysis_uid }}</span>
+                        {% set rc = s.result.risk_category if s.result else 'Low Risk' %}
+                        <span class="risk-badge {% if rc == 'Critical Risk' %}risk-critical{% elif rc == 'High Risk' %}risk-high{% elif rc == 'Medium Risk' %}risk-medium{% else %}risk-low{% endif %}">
+                            {{ s.result.risk_score if s.result else 0 }}/100 &middot; {{ rc }}
+                        </span>
+                    </div>
+                    <h5 class="fw-bold text-white mb-1">{{ s.result.scam_type if s.result else 'Security Analysis' }}</h5>
+                    <div class="small text-info fw-semibold mb-2">Channel: {{ s.channel_label }} &middot; {{ s.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</div>
+                    <p class="text-secondary small mb-3 text-truncate" style="max-width: 100%;">{{ s.submitted_content }}</p>
+                </div>
+
+                <div class="d-flex gap-2 pt-3 border-top border-secondary border-opacity-25">
+                    <a href="{{ url_for('analyzer.download_pdf', scan_id=s.id) }}" class="btn btn-cyber flex-grow-1">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Download PDF Report
+                    </a>
+                    <a href="{{ url_for('analyzer.view_result', scan_id=s.id) }}" class="btn btn-outline-cyber" title="Inspect Full Report">
+                        <i class="fa-solid fa-eye"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="glass-card p-5 text-center">
+                <i class="fa-solid fa-file-pdf display-4 text-muted mb-3"></i>
+                <h4 class="text-white fw-bold">No Security Reports Generated Yet</h4>
+                <p class="text-secondary">Run any scan across the 6 detection channels to generate a downloadable PDF forensic report.</p>
+                <a href="{{ url_for('analyzer.hub') }}" class="btn btn-cyber">Open Scanner</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}500 System Error — ScamShield AI{% endblock %}
+{% block content %}
+<div class="glass-card p-5 text-center my-5 mx-auto" style="max-width: 560px;">
+    <i class="fa-solid fa-triangle-exclamation display-3 text-warning mb-3"></i>
+    <h3 class="fw-bold text-white">500 — Internal Server Error</h3>
+    <p class="text-secondary">An unexpected error occurred while processing your request. Any incomplete database transaction was safely rolled back.</p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-cyber mt-2">Return to Dashboard</a>
+</div>
+{% endblock %}

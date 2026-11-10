@@ -1,0 +1,409 @@
+{% extends 'base.html' %}
+{% block title %}6-Channel Scam Analyzer — ScamShield AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-white mb-1">
+            <i class="fa-solid fa-satellite-dish text-cyan me-2"></i>Multi-Channel Threat Analyzer
+        </h3>
+        <p class="text-secondary small mb-0">
+            Select a communication channel below to run hybrid TF-IDF Machine Learning + Heuristic Security Rule analysis.
+        </p>
+    </div>
+    <div class="mt-2 mt-md-0">
+        <span class="badge bg-dark border border-info border-opacity-25 text-info px-3 py-2">
+            <i class="fa-solid fa-shield-halved me-1"></i>URLs Inspected Statically — Never Visited or Executed
+        </span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: 6 Channel Selector Buttons -->
+    <div class="col-lg-4">
+        <div class="glass-card p-3">
+            <div class="nav-section-title mb-2">Select Detection Channel</div>
+
+            <div class="d-grid gap-2">
+                <button type="button" class="channel-tab-btn {% if active_channel == 'sms' %}active{% endif %}" data-channel="sms">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon-box" style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); color: #60a5fa;">
+                            <i class="fa-solid fa-comment-sms"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white small">A. SMS Analyzer</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">KYC lures, utility threats, OTP harvesting, parcel holds</div>
+                        </div>
+                    </div>
+                </button>
+
+                <button type="button" class="channel-tab-btn {% if active_channel == 'email' %}active{% endif %}" data-channel="email">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon-box" style="width: 40px; height: 40px; background: rgba(6, 182, 212, 0.2); color: #22d3ee;">
+                            <i class="fa-solid fa-envelope-open-text"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white small">B. Email Analyzer</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">BEC wire diversion, sender spoofing, credential phishing</div>
+                        </div>
+                    </div>
+                </button>
+
+                <button type="button" class="channel-tab-btn {% if active_channel == 'url' %}active{% endif %}" data-channel="url">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon-box" style="width: 40px; height: 40px; background: rgba(139, 92, 246, 0.2); color: #a78bfa;">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white small">C. URL Analyzer (Static)</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">HTTPS check, IP hosts, Punycode, brand spoofing, risky TLDs</div>
+                        </div>
+                    </div>
+                </button>
+
+                <button type="button" class="channel-tab-btn {% if active_channel == 'whatsapp' %}active{% endif %}" data-channel="whatsapp">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon-box" style="width: 40px; height: 40px; background: rgba(16, 185, 129, 0.2); color: #34d399;">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white small">D. WhatsApp Analyzer</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Prepaid task jobs, VIP stock groups, "Digital Arrest", family lures</div>
+                        </div>
+                    </div>
+                </button>
+
+                <button type="button" class="channel-tab-btn {% if active_channel == 'social' %}active{% endif %}" data-channel="social">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon-box" style="width: 40px; height: 40px; background: rgba(236, 72, 153, 0.2); color: #f472b6;">
+                            <i class="fa-solid fa-hashtag"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white small">E. Social Media Analyzer</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Crypto doublers, fake badge appeals, influencer giveaways</div>
+                        </div>
+                    </div>
+                </button>
+
+                <button type="button" class="channel-tab-btn {% if active_channel == 'payment' %}active{% endif %}" data-channel="payment">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon-box" style="width: 40px; height: 40px; background: rgba(245, 158, 11, 0.2); color: #fbbf24;">
+                            <i class="fa-solid fa-money-bill-transfer"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white small">F. Payment Request Analyzer</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">UPI PIN collect tricks, overpayment checks, escrow &amp; gift cards</div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-card p-3 mt-3">
+            <h6 class="fw-bold text-white small mb-2"><i class="fa-solid fa-scale-balanced text-cyan me-2"></i>Application-Defined Risk Bands</h6>
+            <div class="d-flex justify-content-between small mb-1">
+                <span class="text-success fw-semibold">0–24: Low Risk</span>
+                <span class="text-muted">Benign / Standard</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1">
+                <span class="text-warning fw-semibold">25–49: Medium Risk</span>
+                <span class="text-muted">Caution Advised</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1">
+                <span style="color: #fb923c;" class="fw-semibold">50–74: High Risk</span>
+                <span class="text-muted">Likely Malicious</span>
+            </div>
+            <div class="d-flex justify-content-between small">
+                <span class="text-danger fw-semibold">75–100: Critical Risk</span>
+                <span class="text-muted">Severe Scam / Phishing</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Channel-Specific Analysis Forms -->
+    <div class="col-lg-8">
+        <!-- A. SMS ANALYZER FORM -->
+        <div class="glass-card p-4 channel-form-pane {% if active_channel != 'sms' %}d-none{% endif %}" data-channel-pane="sms">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-comment-sms text-info me-2"></i>A. SMS Smishing &amp; Threat Analyzer</h5>
+                <span class="badge bg-primary bg-opacity-25 text-info">Channel: SMS</span>
+            </div>
+            <p class="text-secondary small mb-3">
+                Detects urgent bank KYC suspension lures, electricity disconnection threats, parcel redelivery fees, and OTP/PIN harvesting requests.
+            </p>
+            <form method="POST" action="{{ url_for('analyzer.run_scan') }}" class="scam-scan-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="channel" value="sms">
+
+                <div class="mb-3">
+                    <label class="form-label">Sender Number or Header ID (Optional)</label>
+                    <input type="text" name="subject_or_sender" class="form-control" placeholder="e.g. +91-9876543210 or VM-SBIBNK">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">SMS Message Content *</label>
+                    <textarea name="content" rows="5" class="form-control" placeholder="Paste the suspicious SMS message here..." required></textarea>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-cyber fill-sample-btn"
+                                data-sample-sender="+91-98201-55109"
+                                data-sample-content="URGENT: Your bank account has been suspended due to incomplete KYC. Update your PAN and OTP immediately at http://sbi-kyc-update-online.xyz or account will be frozen within 24 hours!">
+                            <i class="fa-solid fa-flask me-1"></i>Load Scam Sample
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary fill-sample-btn"
+                                data-sample-sender="AD-CITCLN"
+                                data-sample-content="Your appointment with Dr. Ananya Verma at City Dental Clinic is confirmed for tomorrow at 10:30 AM. Reply RESCHEDULE if you need to change the time.">
+                            Load Benign Sample
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-cyber">
+                        <i class="fa-solid fa-microscope me-2"></i>Analyze SMS Message
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- B. EMAIL ANALYZER FORM -->
+        <div class="glass-card p-4 channel-form-pane {% if active_channel != 'email' %}d-none{% endif %}" data-channel-pane="email">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-envelope-open-text text-info me-2"></i>B. Email Phishing &amp; BEC Analyzer</h5>
+                <span class="badge bg-primary bg-opacity-25 text-info">Channel: EMAIL</span>
+            </div>
+            <p class="text-secondary small mb-3">
+                Evaluates email subject lines, sender domain spoofing, Business Email Compromise (BEC) invoice diversions, executive gift-card lures, and credential harvesting links.
+            </p>
+            <form method="POST" action="{{ url_for('analyzer.run_scan') }}" class="scam-scan-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="channel" value="email">
+
+                <div class="mb-3">
+                    <label class="form-label">Email Sender &amp; Subject Line *</label>
+                    <input type="text" name="subject_or_sender" class="form-control" placeholder="e.g. From: support@paypal-resolution.info | Subject: URGENT Account Limited">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email Body Text *</label>
+                    <textarea name="content" rows="6" class="form-control" placeholder="Paste the full email body here..." required></textarea>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-cyber fill-sample-btn"
+                                data-sample-sender="From: billing@vendor-remit-update.info | Subject: Invoice #INV-99412 Overdue - Immediate Wire Transfer Change"
+                                data-sample-content="Please note our vendor bank account has changed due to an audit. Remit $28,400 wire payment to the new offshore IBAN account attached urgently within 24 hours.">
+                            <i class="fa-solid fa-flask me-1"></i>Load BEC Phishing Sample
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary fill-sample-btn"
+                                data-sample-sender="From: prof.verma@university.edu | Subject: CS302 Database Systems Project Submission Guidelines"
+                                data-sample-content="Dear students, please submit your final ER diagram and SQL schema report on the university LMS portal by Friday 5:00 PM. Let me know during office hours if you have questions.">
+                            Load Benign Sample
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-cyber">
+                        <i class="fa-solid fa-microscope me-2"></i>Analyze Email
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- C. URL ANALYZER FORM -->
+        <div class="glass-card p-4 channel-form-pane {% if active_channel != 'url' %}d-none{% endif %}" data-channel-pane="url">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-globe text-info me-2"></i>C. Static URL Security Inspector</h5>
+                <span class="badge bg-primary bg-opacity-25 text-info">Channel: URL</span>
+            </div>
+            <p class="text-secondary small mb-3">
+                Performs 100% static lexical &amp; structural analysis: checks HTTPS protocol, raw IPv4 hostnames, Punycode homographs, `@` redirection, subdomain depth, risky TLDs, and brand spoofing without ever visiting the URL.
+            </p>
+            <form method="POST" action="{{ url_for('analyzer.run_scan') }}" class="scam-scan-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="channel" value="url">
+
+                <div class="mb-3">
+                    <label class="form-label">Context / Source of URL (Optional)</label>
+                    <input type="text" name="subject_or_sender" class="form-control" placeholder="e.g. Received in SMS claiming to be PayPal / Bank KYC">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Website URL to Inspect Statically *</label>
+                    <input type="text" name="content" class="form-control font-mono" placeholder="http://paypal.com.account-verify-security-update.xyz/signin/confirm-card" required>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-cyber fill-sample-btn"
+                                data-sample-sender="SMS Phishing Link"
+                                data-sample-content="http://paypal.com.account-verify-security-update.xyz/signin/confirm-card?session=expired">
+                            <i class="fa-solid fa-flask me-1"></i>Load Spoofed URL Sample
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary fill-sample-btn"
+                                data-sample-sender="Official Python Documentation"
+                                data-sample-content="https://docs.python.org/3/library/sqlite3.html">
+                            Load Safe URL Sample
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-cyber">
+                        <i class="fa-solid fa-microscope me-2"></i>Inspect URL Statically
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- D. WHATSAPP MESSAGE ANALYZER FORM -->
+        <div class="glass-card p-4 channel-form-pane {% if active_channel != 'whatsapp' %}d-none{% endif %}" data-channel-pane="whatsapp">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-brands fa-whatsapp text-success me-2"></i>D. WhatsApp Message Analyzer</h5>
+                <span class="badge bg-primary bg-opacity-25 text-info">Channel: WHATSAPP</span>
+            </div>
+            <p class="text-secondary small mb-3">
+                Detects prepaid part-time YouTube/Telegram task scams, fake institutional stock trading groups, "Hi Mom/Dad" emergency impersonation, and "Digital Arrest" video-call extortion.
+            </p>
+            <form method="POST" action="{{ url_for('analyzer.run_scan') }}" class="scam-scan-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="channel" value="whatsapp">
+
+                <div class="mb-3">
+                    <label class="form-label">WhatsApp Sender Number or Group Name (Optional)</label>
+                    <input type="text" name="subject_or_sender" class="form-control" placeholder="e.g. +91-98201-55109 or VIP Bull Trading Group">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Copied WhatsApp Message Text *</label>
+                    <textarea name="content" rows="5" class="form-control" placeholder="Paste the forwarded or direct WhatsApp message here..." required></textarea>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-cyber fill-sample-btn"
+                                data-sample-sender="+91-98201-55109"
+                                data-sample-content="Hello! I am HR Manager from Digital Marketing. Earn Rs 5,000 to Rs 15,000 daily working from home just by liking YouTube videos and rating hotels! Send Rs 5,000 prepaid task deposit to merchant-task@ybl to unlock your withdrawal!">
+                            <i class="fa-solid fa-flask me-1"></i>Load Task Scam Sample
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary fill-sample-btn"
+                                data-sample-sender="College Study Group"
+                                data-sample-content="Hey everyone! I uploaded the handwritten operating systems lecture notes to our shared class drive folder. Good luck with tomorrow's internal assessment!">
+                            Load Benign Sample
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-cyber">
+                        <i class="fa-solid fa-microscope me-2"></i>Analyze WhatsApp Message
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- E. SOCIAL MEDIA MESSAGE ANALYZER FORM -->
+        <div class="glass-card p-4 channel-form-pane {% if active_channel != 'social' %}d-none{% endif %}" data-channel-pane="social">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-hashtag text-info me-2"></i>E. Social Media DM &amp; Post Analyzer</h5>
+                <span class="badge bg-primary bg-opacity-25 text-info">Channel: SOCIAL</span>
+            </div>
+            <p class="text-secondary small mb-3">
+                Identifies fake copyright/blue-badge suspension DMs, crypto giveaway doublers, NFT wallet drainers, fake brand ambassador offers, and false-report admin impersonation.
+            </p>
+            <form method="POST" action="{{ url_for('analyzer.run_scan') }}" class="scam-scan-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="channel" value="social">
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Platform</label>
+                        <select name="platform_or_method" class="form-select">
+                            <option value="Instagram DM">Instagram DM</option>
+                            <option value="Telegram">Telegram</option>
+                            <option value="X / Twitter">X / Twitter</option>
+                            <option value="Facebook / Messenger">Facebook / Messenger</option>
+                            <option value="Discord">Discord</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Account Handle / Sender Profile</label>
+                        <input type="text" name="subject_or_sender" class="form-control" placeholder="e.g. @meta_verified_appeal_desk">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Social Media Message or Promotional Offer *</label>
+                    <textarea name="content" rows="5" class="form-control" placeholder="Paste the social media direct message or post text..." required></textarea>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-cyber fill-sample-btn"
+                                data-sample-sender="@ig_copyright_help_desk"
+                                data-sample-content="DM FROM OFFICIAL SUPPORT: Your Instagram account violated copyright guidelines and will be permanently deleted in 24 hours! Appeal now by entering your login password and 2FA backup code at http://ig-copyright-help-center.site">
+                            <i class="fa-solid fa-flask me-1"></i>Load Badge/Appeal Scam
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary fill-sample-btn"
+                                data-sample-sender="@tech_community_club"
+                                data-sample-content="Great article on machine learning explainability! Thanks for sharing your benchmark results on TF-IDF vs transformer embeddings for small datasets.">
+                            Load Benign Sample
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-cyber">
+                        <i class="fa-solid fa-microscope me-2"></i>Analyze Social Message
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- F. PAYMENT REQUEST ANALYZER FORM -->
+        <div class="glass-card p-4 channel-form-pane {% if active_channel != 'payment' %}d-none{% endif %}" data-channel-pane="payment">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-money-bill-transfer text-warning me-2"></i>F. Payment Request &amp; Collect Fraud Analyzer</h5>
+                <span class="badge bg-primary bg-opacity-25 text-info">Channel: PAYMENT</span>
+            </div>
+            <p class="text-secondary small mb-3">
+                Detects deceptive UPI collect requests ("enter UPI PIN to receive money"), QR code cashback tricks, overpayment fake checks, remote access refund scams, and irreversible crypto/gift-card demands.
+            </p>
+            <form method="POST" action="{{ url_for('analyzer.run_scan') }}" class="scam-scan-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="channel" value="payment">
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Payment Method</label>
+                        <select name="platform_or_method" class="form-select">
+                            <option value="UPI / QR Collect">UPI / QR Collect (GPay, PhonePe, Paytm)</option>
+                            <option value="Bank Wire / NEFT / IMPS">Bank Wire / NEFT / IMPS</option>
+                            <option value="Cryptocurrency (BTC/USDT)">Cryptocurrency (BTC / USDT / ETH)</option>
+                            <option value="Gift Cards (Apple/Steam)">Gift Cards (Apple / Steam / Razer)</option>
+                            <option value="Escrow / Marketplace">Online Marketplace / Escrow</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Requested Amount</label>
+                        <input type="text" name="amount_requested" class="form-control" placeholder="e.g. Rs 15,000 or $1,200">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Counterparty / UPI Handle</label>
+                        <input type="text" name="subject_or_sender" class="form-control" placeholder="e.g. buyer@okaxis">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Payment Request Description &amp; Instructions *</label>
+                    <textarea name="content" rows="5" class="form-control" placeholder="Describe the payment request or paste the buyer/requester instructions..." required></textarea>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-cyber fill-sample-btn"
+                                data-sample-sender="merchant-task@ybl"
+                                data-sample-amount="Rs 15,000"
+                                data-sample-content="Hi, I am buying your sofa from OLX! I have sent Rs 15,000 via PhonePe. Just click 'Pay / Approve' on the UPI collect request notification and enter your 4-digit UPI PIN to receive the money in your account!">
+                            <i class="fa-solid fa-flask me-1"></i>Load UPI PIN Trick Sample
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary fill-sample-btn"
+                                data-sample-sender="College Friends Split"
+                                data-sample-amount="Rs 300"
+                                data-sample-content="Split bill for Friday team pizza lunch at Domino's: 4 medium pizzas total Rs 1,200 divided by 4 people = Rs 300 each. Pay whenever convenient in person.">
+                            Load Benign Sample
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-cyber">
+                        <i class="fa-solid fa-microscope me-2"></i>Analyze Payment Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

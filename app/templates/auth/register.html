@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Register Analyst Account — ScamShield AI{% endblock %}
+
+{% block auth_content %}
+<div class="row justify-content-center align-items-center">
+    <div class="col-md-9 col-lg-6">
+        <div class="text-center mb-4">
+            <div class="brand-shield mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.4rem;">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h2 class="fw-bold text-white mb-1">Register Analyst Account</h2>
+            <p class="text-secondary small">Create an isolated workspace with private scan history and investigation cases.</p>
+        </div>
+
+        <div class="glass-card p-4 p-md-5">
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="username">Username *</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="e.g. sec_analyst01" required minlength="3" maxlength="32">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="email">Email Address *</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="analyst@organization.org" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="full_name">Full Name</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" placeholder="e.g. Priya Nair">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="role_title">Role / Title</label>
+                        <input type="text" class="form-control" id="role_title" name="role_title" value="Security Analyst">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="organization">Organization / Institution</label>
+                        <input type="text" class="form-control" id="organization" name="organization" placeholder="e.g. Cybersecurity Research Lab">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="password">Password (min 8 chars) *</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="At least 8 characters" required minlength="8">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="confirm_password">Confirm Password *</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Repeat password" required minlength="8">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-cyber w-100 py-2 mt-4">
+                    <i class="fa-solid fa-shield-check me-2"></i>Provision Analyst Workspace
+                </button>
+            </form>
+
+            <hr class="border-secondary border-opacity-25 my-4">
+            <div class="text-center small text-secondary">
+                Already have an analyst account?
+                <a href="{{ url_for('auth.login') }}" class="text-cyan fw-semibold text-decoration-none ms-1">Sign In Here</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

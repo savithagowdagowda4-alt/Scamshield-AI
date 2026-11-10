@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — ScamShield AI{% endblock %}
+
+{% block auth_content %}
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-md-8 col-lg-5">
+        <div class="text-center mb-4">
+            <div class="brand-shield mx-auto mb-3" style="width: 56px; height: 56px; font-size: 1.6rem;">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2 class="fw-bold text-white mb-1">ScamShield <span class="text-cyan">AI</span></h2>
+            <p class="text-secondary small">Multi-Channel Scam Detection &amp; Cyber Investigation Platform</p>
+        </div>
+
+        <div class="glass-card p-4 p-md-5">
+            <h4 class="fw-bold text-white mb-1">Analyst Sign In</h4>
+            <p class="text-muted small mb-4">Authenticate to access the 6-channel detection engine and case workspace.</p>
+
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                    <label class="form-label" for="identifier">Username or Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary border-opacity-25 text-info">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </span>
+                        <input type="text" class="form-control" id="identifier" name="identifier" placeholder="analyst or analyst@scamshield.local" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary border-opacity-25 text-info">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
+                        <label class="form-check-label small text-secondary" for="remember">Keep session active (8h)</label>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link text-cyan text-decoration-none p-0" onclick="document.getElementById('identifier').value='analyst'; document.getElementById('password').value='ScamShield@2026';">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Fill Demo Analyst
+                    </button>
+                </div>
+
+                <button type="submit" class="btn btn-cyber w-100 py-2 mb-3">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Authenticate to SOC Workspace
+                </button>
+            </form>
+
+            <div class="p-3 rounded-3 mt-3" style="background: rgba(0, 212, 255, 0.06); border: 1px dashed rgba(0, 212, 255, 0.25);">
+                <div class="small text-info fw-semibold mb-1"><i class="fa-solid fa-terminal me-1"></i>Pre-Seeded Demo Credentials</div>
+                <div class="small text-secondary font-mono">Username: <strong class="text-white">analyst</strong> | Password: <strong class="text-white">ScamShield@2026</strong></div>
+            </div>
+
+            <hr class="border-secondary border-opacity-25 my-4">
+            <div class="text-center small text-secondary">
+                Need a separate analyst account?
+                <a href="{{ url_for('auth.register') }}" class="text-cyan fw-semibold text-decoration-none ms-1">Create Account</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}403 Unauthorized Access — ScamShield AI{% endblock %}
+{% block content %}
+<div class="glass-card p-5 text-center my-5 mx-auto" style="max-width: 560px;">
+    <i class="fa-solid fa-user-lock display-3 text-danger mb-3"></i>
+    <h3 class="fw-bold text-white">403 — Access Denied (Tenant Isolation)</h3>
+    <p class="text-secondary">
+        You do not have permission to view or modify another analyst's private scan records or investigation cases.
+    </p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-cyber mt-2">Return to Your Dashboard</a>
+</div>
+{% endblock %}
+{% block auth_content %}
+<div class="glass-card p-5 text-center my-5 mx-auto" style="max-width: 560px;">
+    <i class="fa-solid fa-user-lock display-3 text-danger mb-3"></i>
+    <h3 class="fw-bold text-white">403 — Access Denied</h3>
+    <p class="text-secondary">You do not have permission to access this resource.</p>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-cyber mt-2">Return to Sign In</a>
+</div>
+{% endblock %}
