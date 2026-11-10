@@ -1,0 +1,14 @@
+{
+  "dataset_size": 113,
+  "scam_samples": 59,
+  "benign_samples": 54,
+  "cv_accuracy_mean": 87.71,
+  "cv_f1_mean": 88.44,
+  "train_accuracy": 95.58,
+  "train_precision": 100.0,
+  "train_recall": 91.53,
+  "train_f1": 95.58,
+  "vocabulary_size": 2500,
+  "model_architecture": "TF-IDF (1-2 ngrams, sublinear TF) + Soft-Voting Ensemble (Logistic Regression + Random Forest)",
+  "dataset_note": "Trained on a clearly labeled 102-sample multi-channel demonstration dataset covering SMS, Email, URL, WhatsApp, Social Media, and Payment Request scenarios. Predictions are combined with transparent channel-specific heuristic rules and never claim 100% certainty."
+}
