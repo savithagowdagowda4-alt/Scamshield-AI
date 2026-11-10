@@ -1,6 +1,9 @@
+import os
 import json
 from datetime import datetime, timedelta, timezone
+
 from flask import Flask, render_template
+
 from config import Config
 from app.extensions import db, login_manager, csrf
 from app.ml.detection import ScamDetectionEngine
@@ -9,6 +12,7 @@ from app.ml.preprocessing import extract_entities
 
 def create_app(config_class=Config) -> Flask:
     """Application factory for ScamShield AI."""
+
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -17,7 +21,7 @@ def create_app(config_class=Config) -> Flask:
     login_manager.init_app(app)
     csrf.init_app(app)
 
-    # Initialize AI/ML & Heuristic Detection Engine
+    # Initialize AI/ML detection engine
     scam_engine = ScamDetectionEngine(app.config['MODEL_DIR'])
     app.extensions['scam_engine'] = scam_engine
 
@@ -46,23 +50,31 @@ def create_app(config_class=Config) -> Flask:
         db.session.rollback()
         return render_template('errors/500.html'), 500
 
-    # Create database tables & seed default demonstration analyst account if empty
+    # Initialize database
     with app.app_context():
         db.create_all()
-        if not app.config.get('TESTING', False):
+
+        # Seed demo data only when explicitly enabled
+        if (
+            not app.config.get('TESTING', False)
+            and os.environ.get('SEED_DEMO_DATA', '').lower() == 'true'
+        ):
             _seed_demo_account_if_empty(scam_engine)
 
     return app
 
 
 def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
-    """
-    Seeds a default demonstration analyst user ('analyst' / 'ScamShield@2026')
-    with representative multi-channel scans and an active investigation case
-    so the dashboard and correlation engine are immediately inspectable on first launch.
-    All statistics are still computed dynamically from these real database records.
-    """
-    from app.models import User, Scan, ScanResult, InvestigationCase, Evidence, InvestigationNote
+    """Create demonstration analyst data when explicitly enabled."""
+
+    from app.models import (
+        User,
+        Scan,
+        ScanResult,
+        InvestigationCase,
+        Evidence,
+        InvestigationNote
+    )
 
     if User.query.first() is not None:
         return
@@ -75,11 +87,13 @@ def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
         organization='ScamShield SOC Lab',
         bio='Specializing in multi-channel phishing, UPI payment fraud, and social engineering investigations.'
     )
+
     demo_user.set_password('ScamShield@2026')
     db.session.add(demo_user)
     db.session.flush()
 
     now = datetime.now(timezone.utc)
+
     sample_submissions = [
         (
             'sms',
@@ -133,8 +147,15 @@ def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
     ]
 
     created_scans = []
+
     for ch, sender, content, ts, uid in sample_submissions:
-        analysis = engine.analyze(channel=ch, content=content, subject_or_sender=sender)
+
+        analysis = engine.analyze(
+            channel=ch,
+            content=content,
+            subject_or_sender=sender
+        )
+
         sc = Scan(
             analysis_uid=uid,
             user_id=demo_user.id,
@@ -144,6 +165,7 @@ def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
             metadata_json='{}',
             created_at=ts
         )
+
         db.session.add(sc)
         db.session.flush()
 
@@ -161,10 +183,11 @@ def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
             feature_breakdown_json=json.dumps(analysis['feature_breakdown']),
             created_at=ts
         )
+
         db.session.add(sr)
         created_scans.append((sc, sr))
 
-    # Create a realistic multi-artifact investigation case showing genuine entity correlation
+    # Create investigation case
     case = InvestigationCase(
         case_uid='CASE-20261105-9F4A2',
         user_id=demo_user.id,
@@ -179,13 +202,19 @@ def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
         created_at=now - timedelta(days=3),
         updated_at=now - timedelta(hours=2)
     )
+
     db.session.add(case)
     db.session.flush()
 
-    # Attach 4 related scans as evidence to demonstrate real entity correlation
+    # Attach related scans as evidence
     for idx in (0, 1, 3, 5):
+
         sc, sr = created_scans[idx]
-        ents = extract_entities(f"{sc.subject_or_sender}\n{sc.submitted_content}")
+
+        ents = extract_entities(
+            f"{sc.subject_or_sender}\n{sc.submitted_content}"
+        )
+
         ev = Evidence(
             case_id=case.id,
             scan_id=sc.id,
@@ -197,8 +226,10 @@ def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
             source_timestamp=sc.created_at.strftime('%Y-%m-%d %H:%M UTC'),
             created_at=sc.created_at + timedelta(minutes=15)
         )
+
         db.session.add(ev)
 
+    # Investigation notes
     note1 = InvestigationNote(
         case_id=case.id,
         user_id=demo_user.id,
@@ -210,6 +241,7 @@ def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
         ),
         created_at=now - timedelta(hours=3)
     )
+
     note2 = InvestigationNote(
         case_id=case.id,
         user_id=demo_user.id,
@@ -217,5 +249,7 @@ def _seed_demo_account_if_empty(engine: ScamDetectionEngine) -> None:
         content='Generated forensic PDF reports for affected users and submitted malicious domain sbi-kyc-update-online.xyz for takedown.',
         created_at=now - timedelta(hours=1)
     )
+
     db.session.add_all([note1, note2])
     db.session.commit()
+    
